@@ -1,0 +1,25 @@
+name: Card selector regression
+on:
+  push:
+    branches: [verify/card-selector-20]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install real Sugar and GTK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-sugar3 python3-gi python3-cairo python3-numpy gir1.2-gtk-3.0 python3-flake8 xvfb
+      - name: Compile and lint regression tests
+        run: |
+          /usr/bin/python3 -m py_compile game.py tests/test_card_selector.py
+          /usr/bin/python3 -m flake8 tests
+          git diff --check e8dd43d1d942fc1657377df2ec8475f0f68467b3
+      - name: Run card-selector regressions
+        run: xvfb-run -a /usr/bin/python3 -m unittest discover -s tests -v
